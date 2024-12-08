@@ -1,6 +1,7 @@
 from django.http import HttpResponse, HttpResponseNotFound
-from django.shortcuts import render, get_object_or_404
-
+from django.shortcuts import render, get_object_or_404, redirect
+from django.utils.text import slugify
+from unidecode import unidecode
 from .forms import AddPostForm
 from .models import Women, Category, TagPost
 
@@ -38,11 +39,23 @@ def show_post(request, post_slug):
     return render(request, 'women/post.html', data)
 
 
+def custom_slugify(value):
+    return slugify(unidecode(value))
+
+
 def addpage(request):
     if request.method == 'POST':
         form = AddPostForm(request.POST)
         if form.is_valid():
-            print(form.cleaned_data)
+            # print(form.cleaned_data)
+            try:
+                form.cleaned_data['slug'] = custom_slugify(form.cleaned_data['title'])
+                tags = form.cleaned_data.pop('tags')
+                new_women = Women.objects.create(**form.cleaned_data)
+                new_women.tags.set(tags)
+                return redirect('home')
+            except:
+                form.add_error(None, 'Ошибка добавления поста')
     else:
         form = AddPostForm()
 
