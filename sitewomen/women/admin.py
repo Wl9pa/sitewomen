@@ -1,5 +1,6 @@
 from django.contrib import admin, messages
 from django.db.models.functions import Length
+from django.utils.safestring import mark_safe
 
 from .models import Women, Category
 
@@ -25,11 +26,12 @@ class MarriedFilter(admin.SimpleListFilter):
 
 @admin.register(Women)
 class WomenAdmin(admin.ModelAdmin):
-    fields = ['title', 'slug', 'content', 'cat', 'husband',
+    fields = ['title', 'slug', 'content', 'post_photo', 'cat', 'husband',
               'tags']  # список отображаемых полей при редактировании записи в админ-панели
+    readonly_fields = ['post_photo']
     prepopulated_fields = {'slug': ('title',)}
     filter_horizontal = ['tags']
-    list_display = ('title', 'time_create', 'is_published', 'cat', 'brief_info')
+    list_display = ('title', 'post_photo', 'time_create', 'is_published', 'cat')
     list_display_links = ('title',)
     ordering = ['time_create', 'title']
     list_editable = ('is_published',)
@@ -37,10 +39,17 @@ class WomenAdmin(admin.ModelAdmin):
     actions = ['set_published', 'set_draft']
     search_fields = ['title', 'cat__name']
     list_filter = [MarriedFilter, 'cat__name', 'is_published']
+    save_on_top = True
 
-    @admin.display(description='Краткое описание', ordering=Length('content'))
-    def brief_info(self, women: Women):
-        return f"Описание {len(women.content)} символов."
+    # @admin.display(description='Краткое описание', ordering=Length('content'))
+    # def brief_info(self, women: Women):
+    #     return f"Описание {len(women.content)} символов."
+
+    @admin.display(description="Изображение")
+    def post_photo(self, women: Women):
+        if women.photo:
+            return mark_safe(f"<a href='{women.photo.url}'><img src='{women.photo.url}' alt='{women.title}' width='50'></a>")
+        return "Без фото"
 
     @admin.action(description='Опубликовать выбранные записи')
     def set_published(self, request, queryset):
