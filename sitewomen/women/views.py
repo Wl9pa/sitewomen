@@ -1,8 +1,9 @@
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
+from django.urls import reverse, reverse_lazy
 from django.utils.text import slugify
 from django.views import View
-from django.views.generic import TemplateView, ListView
+from django.views.generic import TemplateView, ListView, DetailView, FormView, CreateView, UpdateView
 from unidecode import unidecode
 
 from .forms import AddPostForm, UploadFileForm
@@ -93,6 +94,22 @@ def custom_slugify(value):
     return slugify(unidecode(value))
 
 
+class ShowPost(DetailView):
+    # model = Women
+    template_name = 'women/post.html'
+    slug_url_kwarg = 'post_slug'
+    context_object_name = 'post'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['title'] = context['post'].title
+        context['menu'] = menu
+        return context
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Women.published, slug=self.kwargs[self.slug_url_kwarg])
+
+
 # def addpage(request):
 #     if request.method == 'POST':
 #         form = AddPostForm(request.POST, request.FILES)
@@ -120,40 +137,75 @@ def custom_slugify(value):
 #     return render(request, 'women/addpage.html', data)
 
 
-class AddPage(View):
-    def get(self, request):
-        form = AddPostForm()
-        data = {
-            'menu': menu,
-            'title': 'Добавление статьи',
-            'form': form
-        }
+class AddPage(FormView):
+    form_class = AddPostForm
+    template_name = 'women/addpage.html'
+    success_url = reverse_lazy('home')
 
-        return render(request, 'women/addpage.html', data)
+    extra_context = {
+        'menu': menu,
+        'title': 'Добавление статьи',
+    }
 
-    def post(self, request):
-        form = AddPostForm(request.POST, request.FILES)
-        if form.is_valid():
-            # print(form.cleaned_data)
-            # try:
-            #     form.cleaned_data['slug'] = custom_slugify(form.cleaned_data['title'])
-            #     tags = form.cleaned_data.pop('tags')
-            #     new_women = Women.objects.create(**form.cleaned_data)
-            #     new_women.tags.set(tags)
-            #     return redirect('home')
-            # except:
-            #     form.add_error(None, 'Ошибка добавления поста')
-            # form.cleaned_data['slug'] = custom_slugify(form.cleaned_data['title'])
-            form.save()
-            return redirect('home')
+    def form_valid(self, form):
+        form.save()
+        return super().form_valid(form)
 
-        data = {
-            'menu': menu,
-            'title': 'Добавление статьи',
-            'form': form
-        }
 
-        return render(request, 'women/addpage.html', data)
+# class AddPage(CreateView):  #  Способ создания новой статьи через CreateView
+#     form_class = AddPostForm
+#     template_name = 'women/addpage.html'
+#     success_url = reverse_lazy('home')  # указываем конкретно или берется get_absolute_url указанный в модели
+#     extra_context = {
+#         'menu': menu,
+#         'title': 'Добавление статьи'
+#     }
+
+class UpdatePage(UpdateView):
+    model = Women
+    fields = ['title', 'content', 'photo', 'is_published', 'cat']
+    template_name = 'women/addpage.html'
+    success_url = reverse_lazy('home')
+    extra_context = {
+        'menu': menu,
+        'title': 'Редактирование статьи',
+    }
+
+
+# class AddPage(View):
+#     def get(self, request):
+#         form = AddPostForm()
+#         data = {
+#             'menu': menu,
+#             'title': 'Добавление статьи',
+#             'form': form
+#         }
+#
+#         return render(request, 'women/addpage.html', data)
+#
+#     def post(self, request):
+#         form = AddPostForm(request.POST, request.FILES)
+#         if form.is_valid():
+#             # print(form.cleaned_data)
+#             # try:
+#             #     form.cleaned_data['slug'] = custom_slugify(form.cleaned_data['title'])
+#             #     tags = form.cleaned_data.pop('tags')
+#             #     new_women = Women.objects.create(**form.cleaned_data)
+#             #     new_women.tags.set(tags)
+#             #     return redirect('home')
+#             # except:
+#             #     form.add_error(None, 'Ошибка добавления поста')
+#             # form.cleaned_data['slug'] = custom_slugify(form.cleaned_data['title'])
+#             form.save()
+#             return redirect('home')
+#
+#         data = {
+#             'menu': menu,
+#             'title': 'Добавление статьи',
+#             'form': form
+#         }
+#
+#         return render(request, 'women/addpage.html', data)
 
 
 def contact(request):
@@ -184,11 +236,11 @@ class WomenCategory(ListView):
     def get_queryset(self):
         return Women.published.filter(cat__slug=self.kwargs['cat_slug']).select_related('cat')
 
-    def get_context_data(self, **kwargs):
+    def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
         cat = context['posts'][0].cat
         #  cat = get_object_or_404(Category, slug=self.kwargs['cat_slug'])
-        context['title'] = 'Категория - ' + cat.name
+        context['title'] = 'Категория: ' + cat.name
         context['menu'] = menu
         context['cat_selected'] = cat.pk
         return context
@@ -218,9 +270,9 @@ class WomenTag(ListView):
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
-        tag = context['posts'][0].tags.all()[0]
-        #  tag =
-        context['title'] = f'Тег - {tag.tag}'
+        # tag = context['posts'][0].tags.all()[0]
+        tag = TagPost.objects.get(slug=self.kwargs['tag_slug'])
+        context['title'] = f'Тег: {tag.tag}'
         context['menu'] = menu
         context['cat_selected'] = None
         return context
