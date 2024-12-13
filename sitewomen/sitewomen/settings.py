@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'django_extensions',
     'women.apps.WomenConfig',
-    'debug_toolbar'
+    'users.apps.UsersConfig',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [

@@ -208,6 +208,7 @@ class WomenCategory(DataMixin, ListView):
     context_object_name = 'posts'
     allow_empty = False
 
+
     def get_queryset(self):
         return Women.published.filter(cat__slug=self.kwargs['cat_slug']).select_related('cat')
 
