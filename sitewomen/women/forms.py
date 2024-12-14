@@ -35,11 +35,11 @@ class AddPostForm(forms.ModelForm):  # Форма связанная с моде
 
     def clean_title(self):  # Для частной проверки
         title = self.cleaned_data['title']
-        ALLOWED_CHARS = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯабвгдеёжзийклмнопрстуфхцчшщбыъэюя0123456789- "
-
-        if not (set(title) <= set(ALLOWED_CHARS)):
-            raise ValidationError("Должны присутствовать только русские символы, дефис и пробел.")
-        elif len(title) > 50:
+        # ALLOWED_CHARS = "АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯабвгдеёжзийклмнопрстуфхцчшщбыъэюя0123456789- "
+        #
+        # if not (set(title) <= set(ALLOWED_CHARS)):
+        #     raise ValidationError("Должны присутствовать только русские символы, дефис и пробел.")
+        if len(title) > 50:
             raise ValidationError("Длина превышает 50 символов")
         return title
 

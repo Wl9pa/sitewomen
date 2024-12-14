@@ -1,3 +1,5 @@
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.paginator import Paginator
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
@@ -40,6 +42,7 @@ class WomenHome(DataMixin, ListView):
 #             destination.write(chunk)
 
 
+@login_required
 def about(request):
     contact_list = Women.published.all()
     paginator = Paginator(contact_list, 3)
@@ -132,11 +135,18 @@ class ShowPost(DataMixin, DetailView):
 #         return super().form_valid(form)
 
 
-class AddPost(DataMixin, CreateView):  #  Способ создания новой статьи через CreateView
+class AddPost(LoginRequiredMixin, DataMixin, CreateView):  # Способ создания новой статьи через CreateView
     form_class = AddPostForm
     template_name = 'women/addpage.html'
     title_page = 'Добавление статьи'
     success_url = reverse_lazy('home')  # указываем конкретно или берется get_absolute_url указанный в модели
+
+    # login_url = '/admin'  #  Пример перенаправления
+
+    def form_valid(self, form):
+        w = form.save(commit=False)
+        w.author = self.request.user
+        return super().form_valid(form)
 
 
 class UpdatePost(DataMixin, UpdateView):
@@ -208,9 +218,8 @@ class WomenCategory(DataMixin, ListView):
     context_object_name = 'posts'
     allow_empty = False
 
-
     def get_queryset(self):
-        return Women.published.filter(cat__slug=self.kwargs['cat_slug']).select_related('cat')
+        return Women.published.filter(cat__slug=self.kwargs['cat_slug']).select_related('cat').select_related('author')
 
     def get_context_data(self, *, object_list=None, **kwargs):
         context = super().get_context_data(**kwargs)
