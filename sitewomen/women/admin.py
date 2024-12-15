@@ -26,7 +26,7 @@ class MarriedFilter(admin.SimpleListFilter):
 
 @admin.register(Women)
 class WomenAdmin(admin.ModelAdmin):
-    fields = ['title', 'slug', 'content', 'post_photo', 'cat', 'husband',
+    fields = ['title', 'slug', 'content', 'post_photo', 'photo', 'cat', 'husband',
               'tags']  # список отображаемых полей при редактировании записи в админ-панели
     readonly_fields = ['post_photo']
     prepopulated_fields = {'slug': ('title',)}
