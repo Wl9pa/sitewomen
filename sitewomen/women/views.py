@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, PermissionRequiredMixin
 from django.core.paginator import Paginator
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render, get_object_or_404, redirect
@@ -135,10 +135,11 @@ class ShowPost(DataMixin, DetailView):
 #         return super().form_valid(form)
 
 
-class AddPost(LoginRequiredMixin, DataMixin, CreateView):  # Способ создания новой статьи через CreateView
+class AddPost(PermissionRequiredMixin, LoginRequiredMixin, DataMixin, CreateView):  # Способ создания новой статьи через CreateView
     form_class = AddPostForm
     template_name = 'women/addpage.html'
     title_page = 'Добавление статьи'
+    permission_required = 'women.add_women'  #  приложение.действие_таблица
     success_url = reverse_lazy('home')  # указываем конкретно или берется get_absolute_url указанный в модели
 
     # login_url = '/admin'  #  Пример перенаправления
@@ -149,12 +150,13 @@ class AddPost(LoginRequiredMixin, DataMixin, CreateView):  # Способ соз
         return super().form_valid(form)
 
 
-class UpdatePost(DataMixin, UpdateView):
+class UpdatePost(PermissionRequiredMixin, DataMixin, UpdateView):
     model = Women
     fields = ['title', 'content', 'photo', 'is_published', 'cat']
     template_name = 'women/addpage.html'
     title_page = 'Редактирование статьи'
     success_url = reverse_lazy('home')
+    permission_required = 'women.change_women'
 
 
 # class AddPage(View):
