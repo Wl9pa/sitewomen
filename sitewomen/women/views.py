@@ -9,7 +9,7 @@ from django.views import View
 from django.views.generic import TemplateView, ListView, DetailView, FormView, CreateView, UpdateView
 from unidecode import unidecode
 
-from .forms import AddPostForm, UploadFileForm
+from .forms import AddPostForm, UploadFileForm, ContactForm
 from .models import Women, Category, TagPost, UploadFiles
 from .utils import DataMixin
 
@@ -195,8 +195,19 @@ class UpdatePost(PermissionRequiredMixin, DataMixin, UpdateView):
 #         return render(request, 'women/addpage.html', data)
 
 
-def contact(request):
-    return HttpResponse('Обратная связь')
+class ContactFormView(LoginRequiredMixin, DataMixin, FormView):
+    form_class = ContactForm
+    template_name = 'women/contact.html'
+    success_url = reverse_lazy('home')
+    title_page = 'Обратная связь'
+
+    def form_valid(self, form):
+        print(form.cleaned_data)
+        return super().form_valid(form)
+
+
+# def contact(request):
+#     return HttpResponse('Обратная связь')
 
 
 def login(request):
