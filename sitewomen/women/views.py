@@ -7,6 +7,7 @@ from django.urls import reverse, reverse_lazy
 from django.utils.text import slugify
 from django.views import View
 from django.views.generic import TemplateView, ListView, DetailView, FormView, CreateView, UpdateView
+from django.core.cache import cache
 from unidecode import unidecode
 
 from .forms import AddPostForm, UploadFileForm, ContactForm
@@ -22,7 +23,12 @@ class WomenHome(DataMixin, ListView):
     cat_selected = 0
 
     def get_queryset(self):
-        return Women.published.all().select_related('cat')
+        w_lst = cache.get('women_posts')
+        if not w_lst:
+            w_lst = Women.published.all().select_related('cat')
+            cache.set('women_posts', w_lst, 60)
+        return w_lst
+        # return Women.published.all().select_related('cat')
 
     # данные, которые формируются динамически в момент
     # поступления запроса, например, менять параметр cat_selected в зависимости от параметра cat_id GET-запроса
