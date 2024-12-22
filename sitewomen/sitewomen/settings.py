@@ -48,6 +48,8 @@ INSTALLED_APPS = [
     'debug_toolbar',
     'social_django',
     'captcha',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
 ]
 
 MIDDLEWARE = [
@@ -200,3 +202,5 @@ SOCIAL_AUTH_PIPELINE = (
 )
 
 SOCIAL_AUTH_PROTECTED_USER_FIELDS = ['first_name', 'last_name']
+
+SITE_ID = 1
